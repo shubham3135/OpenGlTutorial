@@ -139,15 +139,11 @@ int main()
         0.5f, -0.5f, 0.0f
     };*/
     float vertices[] = {
-        //first triangle
-        0.5f, 0.5f, 0.0f, // top right
-        -0.5f, 0.5f, 0.0f, // top left
-        -0.5f, -0.5f, 0.0f, // bottom left
-
-        //second triangle
-        //-0.5f, -0.5f, 0.0f, // bottom left
-        0.5f, -0.5f, 0.0f, // bottom right
-        //0.5f, 0.5f, 0.0f // top right
+        //positions               colors      
+         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.5f,
+        -0.5f,  0.5f, 0.0f,     0.5f, 1.0f, 0.75f,
+        -0.5f, -0.5f, 0.0f,     0.6f, 1.0f, 0.2f,
+         0.5f, -0.5f, 0.0f,     1.0f, 0.2f, 1.0f
     };
 
     unsigned indices[] = {
@@ -170,8 +166,13 @@ int main()
 
 
     //set attribute pointer
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    //positions
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    //color
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // set up EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
