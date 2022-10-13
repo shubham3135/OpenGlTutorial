@@ -27,7 +27,7 @@ int main()
     int success;
     char infoLog[512];
 
-    // glfw: initialize and configure
+    // glfw: initialize and configures
     // ------------------------------
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
