@@ -6,8 +6,12 @@
 #include <sstream>
 #include <streambuf>
 #include <string>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 using namespace std;
+using namespace glm;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -115,22 +119,22 @@ int main()
         cout << "Error with shader program comp. : " << endl << infoLog << endl;
     }
 
-    shaderProgram[1] = glCreateProgram();
+    //shaderProgram[1] = glCreateProgram();
 
-    glAttachShader(shaderProgram[1], vertexShader);
-    glAttachShader(shaderProgram[1], fragmentShader[1]);
-    glLinkProgram(shaderProgram[1]);
+    //glAttachShader(shaderProgram[1], vertexShader);
+    //glAttachShader(shaderProgram[1], fragmentShader[1]);
+    //glLinkProgram(shaderProgram[1]);
 
-    //catch error
-    glGetProgramiv(shaderProgram[1], GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(shaderProgram[1], 512, NULL, infoLog);
-        cout << "Error with shader program comp. : " << endl << infoLog << endl;
-    }
+    ////catch error
+    //glGetProgramiv(shaderProgram[1], GL_LINK_STATUS, &success);
+    //if (!success) {
+    //    glGetShaderInfoLog(shaderProgram[1], 512, NULL, infoLog);
+    //    cout << "Error with shader program comp. : " << endl << infoLog << endl;
+    //}
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader[0]);
-    glDeleteShader(fragmentShader[1]);
+    //glDeleteShader(fragmentShader[1]);
 
     //vertex array
     /*float vertices[] = {
@@ -178,6 +182,11 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+    mat4 trans = mat4(1.0f);
+    trans = rotate(trans, radians(45.0f), vec3(0.0f, 0.0f, 1.0f));
+    glUseProgram(shaderProgram[0]);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram[0], "transform"), 1, GL_FALSE, value_ptr(trans));
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -190,6 +199,10 @@ int main()
         // ------
         glClearColor(0.8f, 0.6f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+
+        trans = rotate(trans, radians((float) glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram[0], "transform"), 1, GL_FALSE, value_ptr(trans));
 
         // draw shapes
         glBindVertexArray(VAO);
