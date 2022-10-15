@@ -23,6 +23,8 @@ string loadShaderSrc(const char* fileName);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+float mixVal = 0.2f;
+
 int main()
 {
     int success;
@@ -203,12 +205,13 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        trans = rotate(trans, radians((float) glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
+        trans = rotate(trans, radians((float) glfwGetTime() / 10000.0f), vec3(0.0f, 0.0f, 1.0f));
         shader.activate();
         shader.setMat4("transform", trans);
         /*trans2 = rotate(trans2, radians(-(float)glfwGetTime() / 100.0f), vec3(0.0f, 0.0f, 1.0f));
         shader2.activate();
         shader2.setMat4("transform", trans2);*/
+        shader.setFloat("mixVal", mixVal);
 
         // draw shapes
         glBindVertexArray(VAO);
@@ -241,8 +244,24 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+
+    //change mix color
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        mixVal += 0.02f;
+        if (mixVal > 1) {
+            mixVal = 1.0f;
+        }
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        mixVal -= 0.02f;
+        if (mixVal < 0) {
+            mixVal = 0.0f;
+        }
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
