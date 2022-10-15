@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <stb/stb_image.h>
 
 #include <fstream>
 #include <sstream>
@@ -70,18 +71,31 @@ int main()
         0.0f, 0.5f, 0.0f,
         0.5f, -0.5f, 0.0f
     };*/
+    //float vertices[] = {
+    //    //positions               colors                texture coordinates
+    //     0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.5f,           0.0f, 0.0f, 
+    //    -0.5f,  0.5f, 0.0f,     0.5f, 1.0f, 0.75f,          0.0f, 1.0f,
+    //    -0.5f, -0.5f, 0.0f,     0.6f, 1.0f, 0.2f,           1.0f, 0.0f,
+    //     0.5f, -0.5f, 0.0f,     1.0f, 0.2f, 1.0f,           1.0f, 1.0f
+    //};
+
     float vertices[] = {
-        //positions               colors      
-         0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.5f,
-        -0.5f,  0.5f, 0.0f,     0.5f, 1.0f, 0.75f,
-        -0.5f, -0.5f, 0.0f,     0.6f, 1.0f, 0.2f,
-         0.5f, -0.5f, 0.0f,     1.0f, 0.2f, 1.0f
+        // positions		// colors			// texture coordinates
+        -0.5f, -0.5f, 0.0f,	1.0f, 1.0f, 0.5f,	0.0f, 0.0f,	// bottom left
+        -0.5f, 0.5f, 0.0f,	0.5f, 1.0f, 0.75f,	0.0f, 1.0f,	// top left
+        0.5f, -0.5f, 0.0f,	0.6f, 1.0f, 0.2f,	1.0f, 0.0f,	// bottom right
+        0.5f, 0.5f, 0.0f,	1.0f, 0.2f, 1.0f,	1.0f, 1.0f	// top right
     };
 
-    unsigned indices[] = {
-        0, 1, 2, // first tirangle
-        2, 3, 0 // second triangle
+    unsigned int indices[] = {
+        0, 1, 2, // first triangle
+        3, 1, 2  // second triangle
     };
+
+    //unsigned indices[] = {
+    //    0, 1, 2, // first tirangle
+    //    2, 3, 0 // second triangle
+    //};
 
     //VAO & VBO
     unsigned int VAO, VBO, EBO;
@@ -99,18 +113,52 @@ int main()
 
     //set attribute pointer
     //positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     //color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    //texture coordinates
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    //TEXTURES
+    unsigned int texture1;
+
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    // GL_TEXTURE_WRAP_S = X, GL_TEXTURE_WRAP_T = Y, GL_TEXTURE_WRAP_R = Z
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    //LOAD image
+    int width, height, nChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load("assets/corousel1.jpg", &width, &height, &nChannels, 0);
+
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        cout << "Failed to load texture" << endl;
+    }
+
+    stbi_image_free(data);
+
+    shader.activate();
+    shader.setInt("texture1", 0);
 
     // set up EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    mat4 trans = mat4(1.0f);
+    /*mat4 trans = mat4(1.0f);
     trans = rotate(trans, radians(45.0f), vec3(0.0f, 0.0f, 1.0f));
     shader.activate();
     shader.setMat4("transform", trans);
@@ -119,7 +167,7 @@ int main()
     trans2 = scale(trans2, vec3(0.5f));
     trans2 = rotate(trans2, radians(-45.0f), vec3(0.0f, 0.0f, 1.0f));
     shader2.activate();
-    shader2.setMat4("transform", trans2);
+    shader2.setMat4("transform", trans2);*/
     
     // render loop
     // -----------
@@ -134,21 +182,25 @@ int main()
         glClearColor(0.8f, 0.6f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
 
-        trans = rotate(trans, radians((float) glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
-        shader.activate();
-        shader.setMat4("transform", trans);
-        trans2 = rotate(trans2, radians(-(float)glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
-        shader2.activate();
-        shader2.setMat4("transform", trans2);
+        //trans = rotate(trans, radians((float) glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
+        //shader.activate();
+        //shader.setMat4("transform", trans);
+        //trans2 = rotate(trans2, radians(-(float)glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
+        //shader2.activate();
+        //shader2.setMat4("transform", trans2);
 
         // draw shapes
         glBindVertexArray(VAO);
         shader.activate();
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        shader2.activate();
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(3 * sizeof(GLuint)));
+        glBindVertexArray(0);
+
+        //shader2.activate();
+        //glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(3 * sizeof(GLuint)));
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
