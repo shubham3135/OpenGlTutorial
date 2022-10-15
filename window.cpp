@@ -174,12 +174,12 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    /*mat4 trans = mat4(1.0f);
+    mat4 trans = mat4(1.0f);
     trans = rotate(trans, radians(45.0f), vec3(0.0f, 0.0f, 1.0f));
     shader.activate();
     shader.setMat4("transform", trans);
 
-    mat4 trans2 = mat4(1.0f);
+    /*mat4 trans2 = mat4(1.0f);
     trans2 = scale(trans2, vec3(0.5f));
     trans2 = rotate(trans2, radians(-45.0f), vec3(0.0f, 0.0f, 1.0f));
     shader2.activate();
@@ -203,12 +203,12 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        //trans = rotate(trans, radians((float) glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
-        //shader.activate();
-        //shader.setMat4("transform", trans);
-        //trans2 = rotate(trans2, radians(-(float)glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
-        //shader2.activate();
-        //shader2.setMat4("transform", trans2);
+        trans = rotate(trans, radians((float) glfwGetTime() / 1000.0f), vec3(0.0f, 0.0f, 1.0f));
+        shader.activate();
+        shader.setMat4("transform", trans);
+        /*trans2 = rotate(trans2, radians(-(float)glfwGetTime() / 100.0f), vec3(0.0f, 0.0f, 1.0f));
+        shader2.activate();
+        shader2.setMat4("transform", trans2);*/
 
         // draw shapes
         glBindVertexArray(VAO);
