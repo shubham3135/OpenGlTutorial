@@ -11,6 +11,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "Shader.h"
+#include "io/joystick.h"
+#include "io/keyboard.h"
+#include "io/mouse.h"
 
 using namespace std;
 using namespace glm;
@@ -24,6 +27,8 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 float mixVal = 0.2f;
+mat4 transform = mat4(1.0f);
+Joystick mainJ(0);
 
 int main()
 {
@@ -52,6 +57,12 @@ int main()
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    glfwSetKeyCallback(window, Keyboard::keyCallback);
+
+    glfwSetCursorPosCallback(window, Mouse::cursorPosCallback);
+    glfwSetMouseButtonCallback(window, Mouse::mouseButtonCallback);
+    glfwSetScrollCallback(window, Mouse::mouseWheelCallback);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -186,6 +197,15 @@ int main()
     trans2 = rotate(trans2, radians(-45.0f), vec3(0.0f, 0.0f, 1.0f));
     shader2.activate();
     shader2.setMat4("transform", trans2);*/
+
+
+    mainJ.update();
+    if (mainJ.isPresent()) {
+        cout << mainJ.getName()<<" is present " << endl;
+    }
+    else {
+        cout << "Not Present." << endl;
+    }
     
     // render loop
     // -----------
@@ -205,14 +225,14 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        trans = rotate(trans, radians((float) glfwGetTime() / 10000.0f), vec3(0.0f, 0.0f, 1.0f));
-        shader.activate();
-        shader.setMat4("transform", trans);
+        //trans = rotate(trans, radians((float) glfwGetTime() / 10000.0f), vec3(0.0f, 0.0f, 1.0f));
+        //shader.activate();
+        //shader.setMat4("transform", trans);
         /*trans2 = rotate(trans2, radians(-(float)glfwGetTime() / 100.0f), vec3(0.0f, 0.0f, 1.0f));
         shader2.activate();
         shader2.setMat4("transform", trans2);*/
         shader.setFloat("mixVal", mixVal);
-
+        shader.setMat4("transform", transform);
         // draw shapes
         glBindVertexArray(VAO);
         shader.activate();
@@ -244,24 +264,62 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    if (Keyboard::key(GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(window, true);
     }
 
     //change mix color
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+    if (Keyboard::keyWentDown(GLFW_KEY_UP)) {
         mixVal += 0.02f;
         if (mixVal > 1) {
             mixVal = 1.0f;
         }
     }
 
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    if (Keyboard::keyWentDown(GLFW_KEY_DOWN)) {
         mixVal -= 0.02f;
         if (mixVal < 0) {
             mixVal = 0.0f;
         }
     }
+
+    if (Keyboard::keyWentDown(GLFW_KEY_W)) {
+        transform = translate(transform, vec3(0.0f, 0.1f, 0.0f));
+    }
+
+    if (Keyboard::keyWentDown(GLFW_KEY_S)) {
+        transform = translate(transform, vec3(0.0f, -0.1f, 0.0f));
+    }
+
+    if (Keyboard::keyWentDown(GLFW_KEY_A)) {
+        transform = translate(transform, vec3(-0.1f, 0.0f, 0.0f));
+    }
+
+    if (Keyboard::keyWentDown(GLFW_KEY_D)) {
+        transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
+    }
+
+    mainJ.update();
+
+    /*float lx = mainJ.axesState(GLFW_JOYSTICK_AXES_LEFT_STICK_X);
+    float ly = mainJ.axesState(GLFW_JOYSTICK_AXES_LEFT_STICK_Y);
+
+    if (abs(lx) > 0.5f) {
+        transform = translate(transform, vec3(lx/10, 0.0f, 0.0f));
+    }
+
+    if (abs(ly) > 0.5f) {
+        transform = translate(transform, vec3(0.0f, ly / 10, 0.0f));
+    }
+
+    float rt = mainJ.axesState(GLFW_JOYSTICK_AXES_RIGHT_TRIGGER)/2 + 0.5;
+    if (rt > 0.05f) {
+        transform = scale(transform, vec3(1 + rt / 10, 1 + rt / 10, 0.0f));
+    }
+    float lt = mainJ.axesState(GLFW_JOYSTICK_AXES_LEFT_TRIGGER)/2 + 0.5;
+    if (lt > 0.05f) {
+        transform = scale(transform, vec3(1 - lt / 10, 1 - lt / 10, 0.0f));
+    }*/
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
