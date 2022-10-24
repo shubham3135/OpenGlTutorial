@@ -23,12 +23,14 @@ void processInput(GLFWwindow* window);
 string loadShaderSrc(const char* fileName);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+unsigned int SCR_WIDTH = 800;
+unsigned int SCR_HEIGHT = 600;
 
 float mixVal = 0.2f;
 mat4 transform = mat4(1.0f);
 Joystick mainJ(0);
+
+float x, y, z, d;
 
 int main()
 {
@@ -56,13 +58,6 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    glfwSetKeyCallback(window, Keyboard::keyCallback);
-
-    glfwSetCursorPosCallback(window, Mouse::cursorPosCallback);
-    glfwSetMouseButtonCallback(window, Mouse::mouseButtonCallback);
-    glfwSetScrollCallback(window, Mouse::mouseWheelCallback);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -71,6 +66,19 @@ int main()
         cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    glfwSetKeyCallback(window, Keyboard::keyCallback);
+
+    glfwSetCursorPosCallback(window, Mouse::cursorPosCallback);
+    glfwSetMouseButtonCallback(window, Mouse::mouseButtonCallback);
+    glfwSetScrollCallback(window, Mouse::mouseWheelCallback);
+
+    
+
+    
+    glEnable(GL_DEPTH_TEST);
 
     /*
         shaders
@@ -92,17 +100,62 @@ int main()
     //     0.5f, -0.5f, 0.0f,     1.0f, 0.2f, 1.0f,           1.0f, 1.0f
     //};
 
-    float vertices[] = {
-        // positions		// colors			// texture coordinates
-        -0.5f, -0.5f, 0.0f,	1.0f, 1.0f, 0.5f,	0.0f, 0.0f,	// bottom left
-        -0.5f, 0.5f, 0.0f,	0.5f, 1.0f, 0.75f,	0.0f, 1.0f,	// top left
-        0.5f, -0.5f, 0.0f,	0.6f, 1.0f, 0.2f,	1.0f, 0.0f,	// bottom right
-        0.5f, 0.5f, 0.0f,	1.0f, 0.2f, 1.0f,	1.0f, 1.0f	// top right
-    };
+    //float vertices[] = {
+    //    // positions		// colors			// texture coordinates
+    //    -0.5f, -0.5f, 0.0f,	1.0f, 1.0f, 0.5f,	0.0f, 0.0f,	// bottom left
+    //    -0.5f, 0.5f, 0.0f,	0.5f, 1.0f, 0.75f,	0.0f, 1.0f,	// top left
+    //    0.5f, -0.5f, 0.0f,	0.6f, 1.0f, 0.2f,	1.0f, 0.0f,	// bottom right
+    //    0.5f, 0.5f, 0.0f,	1.0f, 0.2f, 1.0f,	1.0f, 1.0f	// top right
+    //};
 
-    unsigned int indices[] = {
-        0, 1, 2, // first triangle
-        3, 1, 2  // second triangle
+    //unsigned int indices[] = {
+    //    0, 1, 2, // first triangle
+    //    3, 1, 2  // second triangle
+    //};
+
+    float vertices[] = {
+        // Positions            texCoord
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
     //unsigned indices[] = {
@@ -114,7 +167,7 @@ int main()
     unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    //glGenBuffers(1, &EBO);
 
     //bind VAO
     glBindVertexArray(VAO);
@@ -126,16 +179,16 @@ int main()
 
     //set attribute pointer
     //positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     //color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    /*glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);*/
 
     //texture coordinates
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     //TEXTURES
     unsigned int texture1, texture2;
@@ -184,13 +237,14 @@ int main()
     shader.setInt("texture2", 1);
 
     // set up EBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    /*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
 
-    mat4 trans = mat4(1.0f);
-    trans = rotate(trans, radians(45.0f), vec3(0.0f, 0.0f, 1.0f));
+    /*mat4 trans = mat4(1.0f);
+    trans = rotate(trans, radians(45.0f), vec3(1.0f, 0.0f, 0.0f));
+    trans = rotate(trans, radians(45.0f), vec3(0.0f, 1.0f, 0.0f));
     shader.activate();
-    shader.setMat4("transform", trans);
+    shader.setMat4("transform", trans);*/
 
     /*mat4 trans2 = mat4(1.0f);
     trans2 = scale(trans2, vec3(0.5f));
@@ -206,6 +260,11 @@ int main()
     else {
         cout << "Not Present." << endl;
     }
+
+    x = 0.0f;
+    y = 0.0f;
+    z = 3.0f;
+    d = 50.0f;
     
     // render loop
     // -----------
@@ -218,7 +277,7 @@ int main()
         // render
         // ------
         glClearColor(0.8f, 0.6f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
@@ -231,12 +290,30 @@ int main()
         /*trans2 = rotate(trans2, radians(-(float)glfwGetTime() / 100.0f), vec3(0.0f, 0.0f, 1.0f));
         shader2.activate();
         shader2.setMat4("transform", trans2);*/
-        shader.setFloat("mixVal", mixVal);
-        shader.setMat4("transform", transform);
         // draw shapes
         glBindVertexArray(VAO);
+
+        //create transformation for screen
+        mat4 model = mat4(1.0f);
+        mat4 view = mat4(1.0f);
+        mat4 projection = mat4(1.0f);
+
+
+        model = rotate(model, (float)glfwGetTime() * radians(-55.0f), vec3(0.5f));
+        view = translate(view, vec3(-x, -y, -z));
+        projection = perspective(radians(d), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+
         shader.activate();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        shader.setMat4("model", model);
+        shader.setMat4("view", view);
+        shader.setMat4("projection", projection);
+
+        shader.setFloat("mixVal", mixVal);
+        //shader.setMat4("transform", transform);
+        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glBindVertexArray(0);
 
@@ -252,7 +329,7 @@ int main()
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    //glDeleteBuffers(1, &EBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -284,19 +361,45 @@ void processInput(GLFWwindow* window)
     }
 
     if (Keyboard::keyWentDown(GLFW_KEY_W)) {
-        transform = translate(transform, vec3(0.0f, 0.1f, 0.0f));
+        //transform = translate(transform, vec3(0.0f, 0.1f, 0.0f));
+
+        y -= 0.03f;
     }
 
     if (Keyboard::keyWentDown(GLFW_KEY_S)) {
-        transform = translate(transform, vec3(0.0f, -0.1f, 0.0f));
+        //transform = translate(transform, vec3(0.0f, -0.1f, 0.0f));
+        y += 0.03f;
     }
 
     if (Keyboard::keyWentDown(GLFW_KEY_A)) {
-        transform = translate(transform, vec3(-0.1f, 0.0f, 0.0f));
+        //transform = translate(transform, vec3(-0.1f, 0.0f, 0.0f));
+        x += 0.03f;
     }
 
     if (Keyboard::keyWentDown(GLFW_KEY_D)) {
-        transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
+        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
+        x -= 0.03f;
+    }
+
+    if (Keyboard::keyWentDown(GLFW_KEY_Q)) {
+        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
+        z -= 0.25f;
+    }
+
+    if (Keyboard::keyWentDown(GLFW_KEY_Z)) {
+        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
+        z += 0.25f;
+    }
+    
+
+    if (Keyboard::keyWentDown(GLFW_KEY_E)) {
+        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
+        d -= 1.0f;
+    }
+
+    if (Keyboard::keyWentDown(GLFW_KEY_C)) {
+        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
+        d += 1.0f;
     }
 
     mainJ.update();
@@ -329,4 +432,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+    SCR_WIDTH = width;
+    SCR_HEIGHT = height;
 }
