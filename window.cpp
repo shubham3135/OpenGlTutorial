@@ -35,8 +35,9 @@ Camera cameras[2] = {
     Camera(vec3(0.0f, 0.0f, 3.0f)),
     Camera(vec3(10.0f, 10.0f, 10.0f))
 };
+int activeCam = 0;
 
-Camera camera(vec3(0.0f, 0.0f, 3.0f));
+//Camera camera(vec3(0.0f, 0.0f, 3.0f));
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
@@ -293,8 +294,8 @@ int main()
 
         model = rotate(model, (float)glfwGetTime() * radians(-55.0f), vec3(0.5f));
         //view = translate(view, vec3(-x, -y, -z));
-        view = camera.getViewMatrix();
-        projection = perspective(radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = cameras[activeCam].getViewMatrix();
+        projection = perspective(radians(cameras[activeCam].zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
 
         shader.activate();
@@ -355,32 +356,37 @@ void processInput(GLFWwindow* window, double dt)
 
     //move camera
     if (Keyboard::key(GLFW_KEY_W)) {
-        camera.updateCameraPosition(CameraDirection::FORWARD, dt);
+        cameras[activeCam].updateCameraPosition(CameraDirection::FORWARD, dt);
     }
     if (Keyboard::key(GLFW_KEY_S)) {
-        camera.updateCameraPosition(CameraDirection::BACKWARD, dt);
+        cameras[activeCam].updateCameraPosition(CameraDirection::BACKWARD, dt);
     }
     if (Keyboard::key(GLFW_KEY_D)) {
-        camera.updateCameraPosition(CameraDirection::RIGHT, dt);
+        cameras[activeCam].updateCameraPosition(CameraDirection::RIGHT, dt);
     }
     if (Keyboard::key(GLFW_KEY_A)) {
-        camera.updateCameraPosition(CameraDirection::LEFT, dt);
+        cameras[activeCam].updateCameraPosition(CameraDirection::LEFT, dt);
     }
     if (Keyboard::key(GLFW_KEY_SPACE)) {
-        camera.updateCameraPosition(CameraDirection::UP, dt);
+        cameras[activeCam].updateCameraPosition(CameraDirection::UP, dt);
     }
     if (Keyboard::key(GLFW_KEY_LEFT_SHIFT)) {
-        camera.updateCameraPosition(CameraDirection::DOWN, dt);
+        cameras[activeCam].updateCameraPosition(CameraDirection::DOWN, dt);
+    }
+
+    if (Keyboard::keyWentDown(GLFW_KEY_TAB)) {
+            activeCam += activeCam==0? 1 : -1;
+        
     }
 
     double dx = Mouse::getDX(), dy = Mouse::getDY();
     if (dx != 0 | dy != 0) {
-        camera.updateCameraDirection(dx, dy);
+        cameras[activeCam].updateCameraDirection(dx, dy);
     }
 
     double scrollDy = Mouse::getScrollDY(), scrollDx = Mouse::getScrollDX();
     if (scrollDy != 0) {
-        camera.updateCameraZoom(scrollDy);
+        cameras[activeCam].updateCameraZoom(scrollDy);
     }
 }
 
