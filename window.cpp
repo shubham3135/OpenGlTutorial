@@ -14,12 +14,13 @@
 #include "io/joystick.h"
 #include "io/keyboard.h"
 #include "io/mouse.h"
+#include "io/camera.h"
 
 using namespace std;
 using namespace glm;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, double dt);
 string loadShaderSrc(const char* fileName);
 
 // settings
@@ -27,8 +28,19 @@ unsigned int SCR_WIDTH = 800;
 unsigned int SCR_HEIGHT = 600;
 
 float mixVal = 0.2f;
-mat4 transform = mat4(1.0f);
 Joystick mainJ(0);
+mat4 transform = mat4(1.0f);
+
+Camera cameras[2] = {
+    Camera(vec3(0.0f, 0.0f, 3.0f)),
+    Camera(vec3(10.0f, 10.0f, 10.0f))
+};
+
+Camera camera(vec3(0.0f, 0.0f, 3.0f));
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+
 
 float x, y, z, d;
 
@@ -74,6 +86,7 @@ int main()
     glfwSetCursorPosCallback(window, Mouse::cursorPosCallback);
     glfwSetMouseButtonCallback(window, Mouse::mouseButtonCallback);
     glfwSetScrollCallback(window, Mouse::mouseWheelCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     
 
@@ -87,31 +100,7 @@ int main()
     Shader shader2("assets/vertex_core.glsl", "assets/fragment_core2.glsl");
 
     //vertex array
-    /*float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f
-    };*/
-    //float vertices[] = {
-    //    //positions               colors                texture coordinates
-    //     0.5f,  0.5f, 0.0f,     1.0f, 1.0f, 0.5f,           0.0f, 0.0f, 
-    //    -0.5f,  0.5f, 0.0f,     0.5f, 1.0f, 0.75f,          0.0f, 1.0f,
-    //    -0.5f, -0.5f, 0.0f,     0.6f, 1.0f, 0.2f,           1.0f, 0.0f,
-    //     0.5f, -0.5f, 0.0f,     1.0f, 0.2f, 1.0f,           1.0f, 1.0f
-    //};
 
-    //float vertices[] = {
-    //    // positions		// colors			// texture coordinates
-    //    -0.5f, -0.5f, 0.0f,	1.0f, 1.0f, 0.5f,	0.0f, 0.0f,	// bottom left
-    //    -0.5f, 0.5f, 0.0f,	0.5f, 1.0f, 0.75f,	0.0f, 1.0f,	// top left
-    //    0.5f, -0.5f, 0.0f,	0.6f, 1.0f, 0.2f,	1.0f, 0.0f,	// bottom right
-    //    0.5f, 0.5f, 0.0f,	1.0f, 0.2f, 1.0f,	1.0f, 1.0f	// top right
-    //};
-
-    //unsigned int indices[] = {
-    //    0, 1, 2, // first triangle
-    //    3, 1, 2  // second triangle
-    //};
 
     float vertices[] = {
         // Positions            texCoord
@@ -272,7 +261,10 @@ int main()
     {
         // input
         // -----
-        processInput(window);
+        double currentTime = glfwGetTime();
+        deltaTime = currentTime - lastFrame;
+        lastFrame = currentTime;
+        processInput(window, deltaTime);
 
         // render
         // ------
@@ -300,8 +292,9 @@ int main()
 
 
         model = rotate(model, (float)glfwGetTime() * radians(-55.0f), vec3(0.5f));
-        view = translate(view, vec3(-x, -y, -z));
-        projection = perspective(radians(d), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        //view = translate(view, vec3(-x, -y, -z));
+        view = camera.getViewMatrix();
+        projection = perspective(radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
 
         shader.activate();
@@ -339,7 +332,7 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, double dt)
 {
     if (Keyboard::key(GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(window, true);
@@ -360,69 +353,35 @@ void processInput(GLFWwindow* window)
         }
     }
 
-    if (Keyboard::keyWentDown(GLFW_KEY_W)) {
-        //transform = translate(transform, vec3(0.0f, 0.1f, 0.0f));
-
-        y -= 0.03f;
+    //move camera
+    if (Keyboard::key(GLFW_KEY_W)) {
+        camera.updateCameraPosition(CameraDirection::FORWARD, dt);
+    }
+    if (Keyboard::key(GLFW_KEY_S)) {
+        camera.updateCameraPosition(CameraDirection::BACKWARD, dt);
+    }
+    if (Keyboard::key(GLFW_KEY_D)) {
+        camera.updateCameraPosition(CameraDirection::RIGHT, dt);
+    }
+    if (Keyboard::key(GLFW_KEY_A)) {
+        camera.updateCameraPosition(CameraDirection::LEFT, dt);
+    }
+    if (Keyboard::key(GLFW_KEY_SPACE)) {
+        camera.updateCameraPosition(CameraDirection::UP, dt);
+    }
+    if (Keyboard::key(GLFW_KEY_LEFT_SHIFT)) {
+        camera.updateCameraPosition(CameraDirection::DOWN, dt);
     }
 
-    if (Keyboard::keyWentDown(GLFW_KEY_S)) {
-        //transform = translate(transform, vec3(0.0f, -0.1f, 0.0f));
-        y += 0.03f;
+    double dx = Mouse::getDX(), dy = Mouse::getDY();
+    if (dx != 0 | dy != 0) {
+        camera.updateCameraDirection(dx, dy);
     }
 
-    if (Keyboard::keyWentDown(GLFW_KEY_A)) {
-        //transform = translate(transform, vec3(-0.1f, 0.0f, 0.0f));
-        x += 0.03f;
+    double scrollDy = Mouse::getScrollDY(), scrollDx = Mouse::getScrollDX();
+    if (scrollDy != 0) {
+        camera.updateCameraZoom(scrollDy);
     }
-
-    if (Keyboard::keyWentDown(GLFW_KEY_D)) {
-        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
-        x -= 0.03f;
-    }
-
-    if (Keyboard::keyWentDown(GLFW_KEY_Q)) {
-        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
-        z -= 0.25f;
-    }
-
-    if (Keyboard::keyWentDown(GLFW_KEY_Z)) {
-        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
-        z += 0.25f;
-    }
-    
-
-    if (Keyboard::keyWentDown(GLFW_KEY_E)) {
-        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
-        d -= 1.0f;
-    }
-
-    if (Keyboard::keyWentDown(GLFW_KEY_C)) {
-        //transform = translate(transform, vec3(0.1f, 0.0f, 0.0f));
-        d += 1.0f;
-    }
-
-    mainJ.update();
-
-    /*float lx = mainJ.axesState(GLFW_JOYSTICK_AXES_LEFT_STICK_X);
-    float ly = mainJ.axesState(GLFW_JOYSTICK_AXES_LEFT_STICK_Y);
-
-    if (abs(lx) > 0.5f) {
-        transform = translate(transform, vec3(lx/10, 0.0f, 0.0f));
-    }
-
-    if (abs(ly) > 0.5f) {
-        transform = translate(transform, vec3(0.0f, ly / 10, 0.0f));
-    }
-
-    float rt = mainJ.axesState(GLFW_JOYSTICK_AXES_RIGHT_TRIGGER)/2 + 0.5;
-    if (rt > 0.05f) {
-        transform = scale(transform, vec3(1 + rt / 10, 1 + rt / 10, 0.0f));
-    }
-    float lt = mainJ.axesState(GLFW_JOYSTICK_AXES_LEFT_TRIGGER)/2 + 0.5;
-    if (lt > 0.05f) {
-        transform = scale(transform, vec3(1 - lt / 10, 1 - lt / 10, 0.0f));
-    }*/
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
